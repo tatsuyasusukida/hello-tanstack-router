@@ -31,10 +31,9 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ColumnDef } from "@tanstack/react-table";
 import { MoreHorizontal } from "lucide-react";
-import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import * as v from "valibot";
 
@@ -146,12 +145,15 @@ function FoodsComponent() {
     },
   ];
 
-  const form = useForm({});
   const searchParams = Route.useSearch();
 
-  useEffect(() => {
-    form.setValue("keyword", searchParams.filter);
-  }, [searchParams.filter]);
+  const form = useForm({
+    values: {
+      keyword: searchParams.filter,
+    },
+  });
+
+  const navigate = useNavigate({ from: Route.fullPath });
 
   return (
     <main className="container mx-auto px-4">
@@ -179,7 +181,14 @@ function FoodsComponent() {
         </ul>
       </nav>
       <Form {...form}>
-        <form className="mb-4 flex w-full max-w-sm items-center space-x-2">
+        <form
+          className="mb-4 flex w-full max-w-sm items-center space-x-2"
+          onSubmit={form.handleSubmit((values) => {
+            navigate({
+              search: (prev) => ({ ...prev, filter: values.keyword, page: 1 }),
+            });
+          })}
+        >
           <FormField
             control={form.control}
             name="keyword"
@@ -199,24 +208,24 @@ function FoodsComponent() {
       <Pagination className="mb-4" aria-label="ページ番号">
         <PaginationContent>
           <PaginationItem>
-            <PaginationPrevious>前ページ</PaginationPrevious>
+            <PaginationPrevious
+              isDisabled={searchParams.page === 1}
+            ></PaginationPrevious>
           </PaginationItem>
+          {[...Array(3)].map((_, i) => {
+            const page = i + 1;
+            return (
+              <PaginationItem>
+                <PaginationLink asChild isActive={searchParams.page === page}>
+                  <Link to="." search={(prev) => ({ ...prev, page })}>
+                    {page}
+                  </Link>
+                </PaginationLink>
+              </PaginationItem>
+            );
+          })}
           <PaginationItem>
-            <PaginationLink to="" isActive>
-              1
-            </PaginationLink>
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationLink to="">2</PaginationLink>
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationLink to="">3</PaginationLink>
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationEllipsis />
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationNext>次ページ</PaginationNext>
+            <PaginationNext isDisabled={searchParams.page === 3} />
           </PaginationItem>
         </PaginationContent>
       </Pagination>

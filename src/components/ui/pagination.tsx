@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { ButtonProps, buttonVariants } from "@/components/ui/button";
-import { Link } from "@tanstack/react-router";
+import { Slot } from "@radix-ui/react-slot";
 
 const Pagination = ({ className, ...props }: React.ComponentProps<"nav">) => (
   <nav
@@ -37,27 +37,41 @@ PaginationItem.displayName = "PaginationItem";
 
 type PaginationLinkProps = {
   isActive?: boolean;
+  isDisabled?: boolean;
+  asChild?: boolean;
 } & Pick<ButtonProps, "size"> &
-  React.ComponentProps<typeof Link>;
+  React.ComponentProps<"a">;
 
 const PaginationLink = ({
   className,
   isActive,
+  isDisabled,
+  asChild,
   size = "icon",
   ...props
-}: PaginationLinkProps) => (
-  <Link
-    aria-current={isActive ? "page" : undefined}
-    className={cn(
-      buttonVariants({
-        variant: isActive ? "outline" : "ghost",
-        size,
-      }),
-      className
-    )}
-    {...props}
-  />
-);
+}: PaginationLinkProps) => {
+  const Comp = asChild ? Slot : "a";
+
+  return (
+    <Comp
+      aria-current={isActive ? "page" : undefined}
+      aria-disabled={isDisabled}
+      tabIndex={isDisabled ? -1 : undefined}
+      className={cn(
+        buttonVariants({
+          variant: isActive ? "outline" : "ghost",
+          size,
+        }),
+        {
+          "pointer-events-none": isDisabled ? "none" : "",
+          "opacity-50": isDisabled,
+        },
+        className
+      )}
+      {...props}
+    />
+  );
+};
 PaginationLink.displayName = "PaginationLink";
 
 const PaginationPrevious = ({
