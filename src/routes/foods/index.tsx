@@ -34,10 +34,18 @@ import {
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ColumnDef } from "@tanstack/react-table";
 import { MoreHorizontal } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import * as v from "valibot";
+
+const searchSchema = v.object({
+  page: v.optional(v.fallback(v.number(), 1), 1),
+  filter: v.optional(v.fallback(v.string(), ""), ""),
+});
 
 export const Route = createFileRoute("/foods/")({
   component: FoodsComponent,
+  validateSearch: searchSchema,
 });
 
 function FoodsComponent() {
@@ -138,7 +146,12 @@ function FoodsComponent() {
     },
   ];
 
-  const form = useForm();
+  const form = useForm({});
+  const searchParams = Route.useSearch();
+
+  useEffect(() => {
+    form.setValue("keyword", searchParams.filter);
+  }, [searchParams.filter]);
 
   return (
     <main className="container mx-auto px-4">
